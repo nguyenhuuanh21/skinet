@@ -3,69 +3,87 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using skinet.Data;
 using skinet.Entities;
+using skinet.Interfaces;
+using skinet.RequestHelpers;
+using skinet.Specifications;
 
 namespace skinet.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProductsController : ControllerBase
+    public class ProductsController(IGenericRepository<Product>repo) : BaseApiController
     {
-        private readonly StoreContext context;
-        public ProductsController(StoreContext context)
-        {
-            this.context = context;
-        }
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
+        public async Task<ActionResult<IReadOnlyList<Product>>> GetProducts([FromQuery]ProductSpecParams productSpecParams)
         {
-            return await context.Products.ToListAsync();
+            var spec=new ProductSpecification(productSpecParams);
+            return await CreatePageResult(repo, spec, productSpecParams.PageIndex, productSpecParams.PageSize);
         }
         [HttpGet]
         [Route("{id:int}")]
         public async Task<ActionResult<Product>> GetProduct(int id)
         {
-            var product = await context.Products.FindAsync(id);
+            var product = await repo.GetByIdAsync(id);
             if (product == null)
             {
                 return NotFound();
             }
-            return product;
+            return Ok(product);
         }
         [HttpPost]
-        public async Task<ActionResult<Product>> CreateProduct(Product product)
+        public async Task<ActionResult> CreateProduct(Product product)
         {
-            context.Products.Add(product);
-            await context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
+            repo.Add(product);
+            if (!await repo.SaveChangesAsync())
+            {
+                return BadRequest("Failed to create product");
+            }
+            return CreatedAtAction("GetProduct", new { id = product.Id }, product);
         }
         [HttpPut]
         [Route("{id:int}")]
-        public async Task<ActionResult<Product>>UpdateProduct(int id, Product product)
+        public async Task<ActionResult>UpdateProduct(int id, Product product)
         {
-            if (!productExists(id))
+            if (!repo.Existed(id))
             {
                 return NotFound();
             }
-            context.Entry(product).State = EntityState.Modified;
-            await context.SaveChangesAsync();
+            repo.Update(product);
+            if(!await repo.SaveChangesAsync())
+            {
+                return BadRequest("Failed to update product");
+            }
             return NoContent();
         }
         [HttpDelete]
         [Route("{id:int}")]
         public async Task<ActionResult> DeleteProduct(int id)
         {
-            var product = await context.Products.FindAsync(id);
+            var product = await repo.GetByIdAsync(id);
             if (product == null)
             {
                 return NotFound();
             }
-            context.Products.Remove(product);
-            await context.SaveChangesAsync();
+            repo.Delete(product);
+            if (!await repo.SaveChangesAsync())
+            {
+                return BadRequest("Failed to delete product");
+            }
             return NoContent();
         }
-        private bool productExists(int id)
+        [HttpGet]
+        [Route("brands")]
+        public async Task<ActionResult<IReadOnlyList<string>>> GetBrands()
         {
-            return context.Products.Any(e => e.Id == id);
+            var spec=new BrandListSpecification();
+            return Ok(await repo.GetAllWithSpec(spec));
+        }
+        [HttpGet]
+        [Route("types")]
+        public async Task<ActionResult<IReadOnlyList<string>>> GetTypes()
+        {
+            var spec = new TypeListSpecification();
+            return Ok(await repo.GetAllWithSpec(spec));
         }
 
     }

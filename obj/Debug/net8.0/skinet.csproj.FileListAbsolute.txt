@@ -146,3 +146,6 @@ D:\nguyen huu anh\C#\NET\ConsoleApp1\skinet\obj\Debug\net8.0\refint\skinet.dll
 D:\nguyen huu anh\C#\NET\ConsoleApp1\skinet\obj\Debug\net8.0\skinet.pdb
 D:\nguyen huu anh\C#\NET\ConsoleApp1\skinet\obj\Debug\net8.0\skinet.genruntimeconfig.cache
 D:\nguyen huu anh\C#\NET\ConsoleApp1\skinet\obj\Debug\net8.0\ref\skinet.dll
+D:\nguyen huu anh\C#\NET\ConsoleApp1\skinet\obj\Debug\net8.0\skinet.sourcelink.json
+D:\nguyen huu anh\C#\NET\ConsoleApp1\skinet\bin\Debug\net8.0\Data\SeedData\delivery.json
+D:\nguyen huu anh\C#\NET\ConsoleApp1\skinet\bin\Debug\net8.0\Data\SeedData\products.json
