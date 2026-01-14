@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using skinet.Data;
 using skinet.Interfaces;
+using skinet.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,12 +21,14 @@ builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepositor
 
 var app = builder.Build();
 
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseHttpsRedirection();
 
