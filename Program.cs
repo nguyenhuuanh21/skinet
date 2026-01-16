@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using skinet.Data;
 using skinet.Interfaces;
 using skinet.Middleware;
+using skinet.Services;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +20,19 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<ICartService, CartService>();
 
+builder.Services.AddCors();
+builder.Services.AddSingleton<IConnectionMultiplexer>(config =>
+{
+    var connString = builder.Configuration.GetConnectionString("Redis");
+    if (connString == null)
+    {
+        throw new InvalidOperationException("Redis connection string is not configured.");
+    }
+    var configuration= ConfigurationOptions.Parse(connString, true);
+    return ConnectionMultiplexer.Connect(configuration);
+});
 var app = builder.Build();
 
 
@@ -30,7 +44,10 @@ if (app.Environment.IsDevelopment())
 }
 app.UseMiddleware<ExceptionMiddleware>();
 
-app.UseHttpsRedirection();
+app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod()
+.WithOrigins("https://localhost:4200", "http://localhost:4200"));
+
+
 
 app.UseAuthorization();
 
