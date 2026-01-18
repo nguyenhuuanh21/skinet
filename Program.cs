@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using skinet.Data;
+using skinet.Entities;
 using skinet.Interfaces;
 using skinet.Middleware;
 using skinet.Services;
@@ -21,6 +22,10 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddAuthorization();
+builder.Services.AddIdentityApiEndpoints<AppUser>()
+    .AddEntityFrameworkStores<StoreContext>();
+;
 
 builder.Services.AddCors();
 builder.Services.AddSingleton<IConnectionMultiplexer>(config =>
@@ -52,6 +57,7 @@ app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod()
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapGroup("api").MapIdentityApi<AppUser>();
 
 try
 {
